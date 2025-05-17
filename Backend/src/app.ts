@@ -1,40 +1,70 @@
-// src/app.ts (simplified)
-import express from 'express';
+// src/app.ts
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import pinoHttp from 'pino-http';
+
+import { env } from '@/config/environment';
+import { logger } from '@/config/logger.config'; // Use the named export
 import { protect } from '@/middleware/auth.middleware';
 import { errorHandler } from '@/middleware/error.middleware';
 import { notFoundHandler } from '@/middleware/notFound.middleware';
-import { env } from '@/config/environment';
-import logger from '@/config/logger.config'; // Morgan can also be used for HTTP request logging
-import pinoHttp from 'pino-http';
+import { ApiError } from '@/utils/ApiError';
 
+// Import Routers
+import userRoutes from '@/modules/users/user.routes';
+// import authRoutes from '@/modules/auth/auth.routes'; // Will be added later
 
-// Example Router
-// import authRoutes from '@/modules/auth/auth.routes';
-// import ticketRoutes from '@/modules/tickets/ticket.routes';
+const app: Express = express();
 
-const app = express();
-
-// Request logging (Pino HTTP)
+// Setup common HTTP request logging with Pino
+// This should be one of the first middleware
 app.use(pinoHttp({ logger }));
 
-// Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Enable CORS - Cross-Origin Resource Sharing
+// Configure this more strictly for production
+app.use(cors({
+  origin: '*', // Allow all origins for now, restrict in production
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
-// Apply JWT authentication globally (or selectively on routes)
-// If applied globally, req.user will be populated if token is valid.
-// Public routes won't fail if no token, but req.user will be undefined.
+// Set security-related HTTP headers
+app.use(helmet());
+
+// Parse JSON request bodies
+app.use(express.json({ limit: '10mb' })); // Adjust limit as needed
+
+// Parse URL-encoded request bodies
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Gzip compression
+app.use(compression());
+
+// Global JWT authentication middleware
+// Populates req.user if token is valid. Routes can then use requireAuth or authorize.
 app.use(protect);
 
-// Mount your routes
-// app.use(`${env.API_PREFIX}/auth`, authRoutes);
-// app.use(`${env.API_PREFIX}/tickets`, ticketRoutes);
-// ... other routes
+// API Routes
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send({
+    message: `Welcome to Citizen Engagement API - ${env.NODE_ENV} environment!`,
+    health: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.use(`${env.API_PREFIX}/users`, userRoutes);
+// app.use(`${env.API_PREFIX}/auth`, authRoutes); // To be added
 
 // Handle 404 Not Found for any unhandled routes
+// This should be after all your routes
 app.use(notFoundHandler);
 
-// Global error handler (should be the last middleware)
+// Global error handler
+// This must be the last piece of middleware
 app.use(errorHandler);
 
 export default app;

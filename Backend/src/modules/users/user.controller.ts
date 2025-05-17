@@ -35,7 +35,8 @@ export class UserController {
   });
 
   listUsers = catchAsync(async (req: Request, res: Response) => {
-    const query = req.query as ListUsersQueryDto; // Type assertion, validation handles structure
+    // const query = req.query as ListUsersQueryDto; // Type assertion, validation handles structure
+    const query = req.query as unknown as ListUsersQueryDto;
     const result = await this.userService.listUsers(query);
     res.status(200).json({
       status: 'success',

@@ -10,7 +10,7 @@ import {
   UserFilter,
   PaginatedUsersResponse,
   UpdateUserPayload,
-} from './user.interfaces';
+} from './interfaces/user.interfaces';
 import { ApiError } from '@/utils/ApiError';
 import { generateRandomPassword } from '@/utils/password.utils'; // We'll create this utility
 import { UserRole } from './enums/user.enums';

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction  } from 'express';
 import { UserController } from './user.controller';
 import { validateBody, validateQuery, validateParams } from '@/middleware/validate.middleware';
 import { CreateStaffUserSchema, UpdateUserSchema, ListUsersQuerySchema } from './dto';
@@ -37,7 +37,7 @@ router.get(
 router.patch(
   '/:userId',
   authorize([UserRole.ADMIN]),
-  (req, res, next) => { // Custom validation to use combined schema
+  (req: Request, res: Response, next: NextFunction) => { // Custom validation to use combined schema
     const result = UpdateUserSchema.safeParse({ params: req.params, body: req.body });
     if (!result.success) {
       // Pass ZodError to global error handler

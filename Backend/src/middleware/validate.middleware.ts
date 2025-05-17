@@ -1,11 +1,13 @@
 // src/middleware/validate.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { AnyZodObject, ZodError, ZodSchema } from 'zod';
 import { ApiError } from '@/utils/ApiError'; // Or just pass ZodError to global error handler
 
 // This middleware factory validates different parts of the request against a Zod schema.
 export const validate =
-  (schema: AnyZodObject) =>
+  (schema: ZodSchema<any>)=>
+// export const validate =
+//   (schema: AnyZodObject) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Zod will parse and validate:
@@ -46,7 +48,7 @@ export const validate =
 
 // Specific validators (more explicit, easier to use)
 export const validateBody =
-  (schema: AnyZodObject) =>
+  (schema: ZodSchema<any>) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       req.body = await schema.parseAsync(req.body);
@@ -57,7 +59,7 @@ export const validateBody =
   };
 
 export const validateQuery =
-  (schema: AnyZodObject) =>
+  (schema: ZodSchema<any>) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       req.query = await schema.parseAsync(req.query);
@@ -68,7 +70,7 @@ export const validateQuery =
   };
 
 export const validateParams =
-  (schema: AnyZodObject) =>
+  (schema: ZodSchema<any>) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       req.params = await schema.parseAsync(req.params);

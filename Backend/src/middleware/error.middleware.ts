@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 import { ApiError } from '@/utils/ApiError';
 import { env } from '@/config/environment';
-import logger from '@/config/logger.config'; // Assuming logger.config.ts exports logger
+import { logger } from '@/config/logger.config'; 
 
 interface ErrorResponse {
   statusCode: number;
