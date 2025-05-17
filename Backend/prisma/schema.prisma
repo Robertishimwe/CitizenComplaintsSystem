@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql" // Or your preferred database: "mysql", "sqlite", "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ENUMS
+
+enum UserRole {
+  ADMIN
+  CITIZEN
+  AGENCY_STAFF
+}
+
+enum ResourceStatus { // Reusable status for User, Agency, RoutingRule
+  ACTIVE
+  INACTIVE
+}
+
+enum TicketStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS_PENDING_AGENT // Agent is working, citizen might be waiting for agent
+  IN_PROGRESS_PENDING_CITIZEN // Agent is waiting for citizen response
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// MODELS
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String   @unique // 10 digits, validated at application level
+  password  String   // Hashed password
+  role      UserRole
+  status    ResourceStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agencyId String?
+  agency   Agency? @relation("AgencyStaff", fields: [agencyId], references: [id], onDelete: SetNull) // If agency is deleted, staff becomes unassigned
+
+  createdTickets   Ticket[]       @relation("CitizenTickets")   // Tickets created by this citizen
+  assignedTickets  Ticket[]       @relation("AgentTickets")     // Tickets assigned to this agent
+  communications   Communication[]@relation("SenderCommunications")
+
+  @@index([email])
+  @@index([phone])
+  @@index([agencyId])
+  @@map("users") // Explicit table name
+}
+
+model Agency {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String?
+  contactEmail  String
+  contactPhone  String?
+  status        ResourceStatus @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  staffMembers  User[]         @relation("AgencyStaff")
+  routingRules  RoutingRule[]  @relation("AgencyRoutingRules")
+  assignedTickets Ticket[]     @relation("AgencyTickets") // Tickets currently assigned to this agency
+
+  @@map("agencies")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parentCategoryId String?
+  parentCategory   Category?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories    Category[] @relation("CategoryHierarchy")
+
+  routingRule RoutingRule? // A category can have one routing rule.
+  tickets     Ticket[]     @relation("TicketCategory")
+
+  @@map("categories")
+}
+
+model RoutingRule {
+  id        String   @id @default(cuid())
+  status    ResourceStatus @default(ACTIVE) // Active or Inactive rule
+  description String?    // Optional description for the rule itself
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId      String   @unique // Each category has at most one active routing rule.
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade) // If Category is deleted, this rule is deleted.
+
+  assignedAgencyId String
+  assignedAgency   Agency   @relation("AgencyRoutingRules", fields: [assignedAgencyId], references: [id], onDelete: Cascade) // If Agency is deleted, this rule is deleted.
+
+  @@map("routing_rules")
+}
+
+model Ticket {
+  id                  String   @id @default(cuid())
+  title               String
+  location            String         // e.g., "123 Main St, Anytown"
+  priority            TicketPriority @default(MEDIUM)
+  detailedDescription String
+  status              TicketStatus   @default(NEW)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // For anonymous submissions
+  isAnonymous         Boolean        @default(false)
+  anonymousCreatorName String?       // Optional name for anonymous user
+  anonymousCreatorContact String?    // Optional contact (email/phone) for anonymous user
+
+  // For registered citizen
+  citizenId           String?
+  citizen             User?          @relation("CitizenTickets", fields: [citizenId], references: [id], onDelete: SetNull) // If citizen User is deleted, ticket remains but citizenId is null
+
+  // For assigned agent and agency
+  assignedAgentId     String?
+  assignedAgent       User?          @relation("AgentTickets", fields: [assignedAgentId], references: [id], onDelete: SetNull) // If agent User is deleted, agentId is null
+
+  assignedAgencyId    String?
+  assignedAgency      Agency?        @relation("AgencyTickets", fields: [assignedAgencyId], references: [id], onDelete: SetNull) // If Agency is deleted, agencyId is null
+
+  categoryId          String?        // Optional, especially if AI suggestion is used
+  category            Category?      @relation("TicketCategory", fields: [categoryId], references: [id], onDelete: SetNull) // If Category is deleted, categoryId is null
+
+  communications      Communication[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([citizenId])
+  @@index([assignedAgentId])
+  @@index([assignedAgencyId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@map("tickets")
+}
+
+model Communication {
+  id        String   @id @default(cuid())
+  message   String   @db.Text // Use Text for potentially long messages
+  timestamp DateTime @default(now())
+  isInternal Boolean  @default(false) // True if internal note for agency staff only
+
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade) // If ticket is deleted, its communications are also deleted.
+
+  senderId  String? // Nullable if sender is anonymous or if user is deleted
+  sender    User?     @relation("SenderCommunications", fields: [senderId], references: [id], onDelete: SetNull) // If sender User is deleted, senderId becomes null
+
+  @@index([ticketId])
+  @@index([senderId])
+  @@map("communications")
+}
