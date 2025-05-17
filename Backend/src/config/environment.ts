@@ -24,9 +24,15 @@ const environmentSchema = z.object({
   JWT_ACCESS_EXPIRATION_MINUTES: numericString(30),
   JWT_REFRESH_EXPIRATION_DAYS: numericString(30),
 
+  // REDIS_HOST: z.string().default('localhost'),
+  // REDIS_PORT: numericString(6379),
+  // REDIS_PASSWORD: z.string().optional(),
+
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: numericString(6379),
-  REDIS_PASSWORD: z.string().optional(),
+  REDIS_PASSWORD: z.string(),
+  REDIS_USERNAME: z.string(),
+  REDIS_TLS_ENABLED: z.string().default('default'),
 
   PINDO_API_TOKEN: z.string().min(1, 'PINDO_API_TOKEN is required'),
   PINDO_SENDER_ID: z.string().min(1, 'PINDO_SENDER_ID is required'),

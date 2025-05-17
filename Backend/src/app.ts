@@ -16,7 +16,9 @@ import { ApiError } from '@/utils/ApiError';
 import userRoutes from '@/modules/users/user.routes';
 import authRoutes from '@/modules/auth/auth.routes';
 import agencyRoutes from '@/modules/agencies/agency.routes';
+import ticketRoutes from '@/modules/tickets/ticket.routes';
 import categoryRoutes from '@/modules/categories/category.routes';
+import routingRuleRoutes from '@/modules/routingRules/routing-rule.routes';
 // import authRoutes from '@/modules/auth/auth.routes'; // Will be added later
 
 const app: Express = express();
@@ -62,7 +64,10 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/agencies', agencyRoutes);
+app.use('/tickets', ticketRoutes);
 app.use('/categories', categoryRoutes);
+app.use('/routing-rules', routingRuleRoutes);
+
 // app.use(`${env.API_PREFIX}/auth`, authRoutes); // To be added
 
 // Handle 404 Not Found for any unhandled routes

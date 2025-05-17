@@ -5,6 +5,8 @@ import { env } from '@/config/environment';
 import { logger } from '@/config/logger.config';
 import prisma from '@/config/prisma'; // To ensure Prisma client is connected/handled
 import { seedAdminUser } from '@/db/seed';
+import { testRedisConnection } from '@/config/bullmq';
+import { createNotificationWorker } from '@/modules/notifications/notification.worker';
 
 const PORT = env.PORT || 3000;
 
@@ -15,7 +17,9 @@ const startServer = async () => {
     // Optional: Check database connection before starting server
     await prisma.$connect();
     logger.info('🔌 Database connected successfully.');
+    await testRedisConnection()
     await seedAdminUser();
+    await createNotificationWorker()
 
     server.listen(PORT, () => {
       logger.info(`🚀 Server is listening on port ${PORT}`);
@@ -60,7 +64,7 @@ process.on('unhandledRejection', (reason: Error | any, promise: Promise<any>) =>
 // Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
 
-  // console.log(">>>>>>>>>>",error)
+  console.log(">>>>>>>>>>",error)
   logger.error('💥 Uncaught Exception:', error);
   // It's generally recommended to exit on uncaught exceptions after logging,
   // as the application might be in an inconsistent state.
