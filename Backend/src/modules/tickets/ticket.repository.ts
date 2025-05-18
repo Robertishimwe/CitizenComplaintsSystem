@@ -37,13 +37,47 @@ export class TicketRepository {
     },
   };
 
-  async create(data: CreateTicketPayload, assignedAgencyId?: string): Promise<TicketWithDetails> {
+  // async create(data: CreateTicketPayload, assignedAgencyId?: string): Promise<TicketWithDetails> {
+  //   console.log(">>>>>>>>>", data)
+  //   const createData: Prisma.TicketCreateInput = {
+  //     title: data.title,
+  //     location: data.location,
+  //     priority: data.priority || TicketPriority.MEDIUM,
+  //     detailedDescription: data.detailedDescription,
+  //     // status: TicketStatus.NEW, // Initial status
+  //     status: data.status,
+  //     isAnonymous: data.isAnonymous || false,
+  //      assignedAgency: data.assignedAgencyId ? { connect: { id: data.assignedAgencyId } } : undefined };
+
+  //   if (data.isAnonymous) {
+  //     createData.anonymousCreatorName = data.anonymousCreatorName;
+  //     createData.anonymousCreatorContact = data.anonymousCreatorContact;
+  //   } else if (data.citizenId) {
+  //     createData.citizen = { connect: { id: data.citizenId } };
+  //   }
+
+  //   if (data.categoryId) {
+  //     createData.category = { connect: { id: data.categoryId } };
+  //   }
+
+  //   if (assignedAgencyId) {
+  //     createData.assignedAgency = { connect: { id: assignedAgencyId } };
+  //     // Status might change to ASSIGNED if an agency is immediately identified
+  //     // Or keep NEW and let an admin/agent assign it. For now, let's keep NEW.
+  //   }
+
+  //   return prisma.ticket.create({
+  //     data: createData,
+  //     include: this.ticketIncludeClause,
+  //   });
+  // }
+    async create(data: CreateTicketPayload): Promise<TicketWithDetails> { // Only takes data: CreateTicketPayload
     const createData: Prisma.TicketCreateInput = {
       title: data.title,
       location: data.location,
       priority: data.priority || TicketPriority.MEDIUM,
       detailedDescription: data.detailedDescription,
-      status: TicketStatus.NEW, // Initial status
+      status: data.status || TicketStatus.NEW, // Use status from payload, default to NEW
       isAnonymous: data.isAnonymous || false,
     };
 
@@ -58,10 +92,9 @@ export class TicketRepository {
       createData.category = { connect: { id: data.categoryId } };
     }
 
-    if (assignedAgencyId) {
-      createData.assignedAgency = { connect: { id: assignedAgencyId } };
-      // Status might change to ASSIGNED if an agency is immediately identified
-      // Or keep NEW and let an admin/agent assign it. For now, let's keep NEW.
+    // Use assignedAgencyId from the payload
+    if (data.assignedAgencyId) {
+      createData.assignedAgency = { connect: { id: data.assignedAgencyId } };
     }
 
     return prisma.ticket.create({
@@ -69,6 +102,7 @@ export class TicketRepository {
       include: this.ticketIncludeClause,
     });
   }
+
 
   async findById(id: string): Promise<TicketWithDetails | null> {
     return prisma.ticket.findUnique({

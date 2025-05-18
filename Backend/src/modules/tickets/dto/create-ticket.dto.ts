@@ -7,6 +7,7 @@ export const CreateTicketSchema = z.object({
     categoryId: z.string().cuid('Invalid category ID format').nullable().optional(), // Optional for AI suggestion
     location: z.string().min(5, 'Location description is too short').trim(),
     priority: z.nativeEnum(TicketPriority).optional().default(TicketPriority.MEDIUM),
+    
     detailedDescription: z.string().min(10, 'Detailed description must be at least 10 characters long').trim(),
     // For anonymous submissions (if user is not logged in)
     isAnonymous: z.boolean().optional().default(false),

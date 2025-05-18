@@ -4,7 +4,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 export const geminiAiConfig = {
   apiKey: env.GEMINI_API_KEY,
   // You can add model names or other default settings here
-  defaultModel: 'gemini-1.0-pro-latest', // Or 'gemini-pro' or other models
+  defaultModel: 'gemini-2.0-flash', // Or 'gemini-pro' or other models
   // Safety settings can be configured here, adjust as needed
   safetySettings: [
     {

@@ -20,16 +20,20 @@ import {
 } from './interfaces/ticket.interfaces';
 import { ApiError } from '@/utils/ApiError';
 import { NotificationService } from '@/modules/notifications/notification.service';
+import { TicketAiService } from './services/ticket.ai.service';
 import prisma from '@/config/prisma';
-import { User, UserRole, TicketStatus, ResourceStatus, TicketPriority, Communication } from '@prisma/client'; // Added Communication
+import { User, UserRole, TicketStatus, ResourceStatus, TicketPriority, Communication, Category } from '@prisma/client'; // Added Communication
+import { logger } from '@/config';
 
 export class TicketService {
   private ticketRepository: TicketRepository;
   private notificationService: NotificationService;
+  private ticketAiService: TicketAiService;
 
   constructor() {
     this.ticketRepository = new TicketRepository();
     this.notificationService = new NotificationService();
+    this.ticketAiService = new TicketAiService();
   }
 
   // Regular private method
@@ -86,43 +90,182 @@ export class TicketService {
     return response;
   }
 
-  async createTicket(dto: CreateTicketDto, creatingUser?: User): Promise<TicketResponse> {
+  // async createTicket(dto: CreateTicketDto, creatingUser?: User): Promise<TicketResponse> {
+  //   const payload: CreateTicketPayload = {
+  //     ...dto,
+  //     status: 'NEW'
+  //   };
+  //   let assignedAgencyId: string | undefined = undefined;
+  //   let initialStatus: TicketStatus = TicketStatus.NEW;
+  //   let categoryObject: Category | null = null; // To store the fetched category object
+  //     let categoryNameForAi: string | undefined = undefined;
+
+  //   if (creatingUser) {
+  //     payload.isAnonymous = false;
+  //     payload.citizenId = creatingUser.id;
+  //   } else if (!dto.isAnonymous) {
+  //     payload.isAnonymous = true;
+  //     if (!dto.anonymousCreatorName || !dto.anonymousCreatorContact) {
+  //         throw new ApiError(400, 'Name and contact are required for non-logged-in submissions not marked anonymous.');
+  //     }
+  //   }
+
+  //   // if (dto.categoryId) {
+  //   //   const category = await prisma.category.findUnique({ where: { id: dto.categoryId } });
+  //   //   if (!category) {
+  //   //     throw new ApiError(404, `Category with ID "${dto.categoryId}" not found.`);
+  //   //   }
+  //   //   const routingRule = await prisma.routingRule.findUnique({
+  //   //     where: { categoryId: dto.categoryId, status: ResourceStatus.ACTIVE },
+  //   //   });
+  //   //   if (routingRule && routingRule.assignedAgencyId) {
+  //   //     const agency = await prisma.agency.findUnique({where: {id: routingRule.assignedAgencyId}});
+  //   //     if (agency && agency.status === ResourceStatus.ACTIVE) {
+  //   //         assignedAgencyId = routingRule.assignedAgencyId;
+  //   //     } else {
+  //   //         console.warn(`Routing rule found for category ${dto.categoryId} but agency ${routingRule.assignedAgencyId} is inactive or not found.`);
+  //   //     }
+  //   //   } else {
+  //   //     console.warn(`No active routing rule found for category ${dto.categoryId}. Ticket will be unassigned from an agency.`);
+  //   //   }
+  //   // } else {
+  //   //    console.warn(`No category ID provided. Ticket will be unassigned from an agency and category.`);
+  //   // }
+
+  //       // 1. Handle Category and Attempt Rule-Based Assignment
+  //       if (dto.categoryId) {
+  //         categoryObject = await prisma.category.findUnique({ where: { id: dto.categoryId } });
+  //         if (!categoryObject) {
+  //           // If categoryId is provided but not found, it's an error.
+  //           // We won't proceed to AI if an invalid category ID was given.
+  //           throw new ApiError(400, `Invalid category ID: "${dto.categoryId}" not found.`);
+  //         }
+  //         payload.categoryId = dto.categoryId; // Store valid categoryId in payload
+  //         categoryNameForAi = categoryObject.name; // Use for AI context
+    
+  //         const routingRule = await prisma.routingRule.findUnique({
+  //           where: { categoryId: dto.categoryId, status: ResourceStatus.ACTIVE },
+  //         });
+    
+  //         if (routingRule && routingRule.assignedAgencyId) {
+  //           const agency = await prisma.agency.findUnique({ where: { id: routingRule.assignedAgencyId } });
+  //           if (agency && agency.status === ResourceStatus.ACTIVE) {
+  //              payload.assignedAgencyId = routingRule.assignedAgencyId; // Set on payload
+  //              payload.status = TicketStatus.ASSIGNED; 
+  //             logger.info(`Ticket auto-assigned to agency "${agency.name}" (ID: ${agency.id}) via routing rule for category "${categoryObject.name}". Status set to ${initialStatus}.`);
+  //           } else {
+  //             logger.warn(`Rule-based: Agency for category "${categoryObject.name}" (rule points to ID: ${routingRule.assignedAgencyId}) is inactive or not found. Will attempt AI suggestion.`);
+  //           }
+  //         } else {
+  //           logger.info(`No active routing rule for category "${categoryObject.name}". Will attempt AI suggestion.`);
+  //         }
+  //       } else {
+  //         logger.info('No category ID provided by user. Will attempt AI-based agency suggestion.');
+  //         // categoryNameForAi remains undefined
+  //       }
+  //   payload.status = initialStatus;
+  //   payload.assignedAgencyId = assignedAgencyId;
+
+  
+  //   const newTicket = await this.ticketRepository.create(payload, assignedAgencyId);
+    async createTicket(dto: CreateTicketDto, creatingUser?: User): Promise<TicketResponse> {
+    // Initialize payload directly from dto.
+    // status and assignedAgencyId will be added/updated based on logic.
     const payload: CreateTicketPayload = { ...dto };
-    let assignedAgencyId: string | undefined = undefined;
+
+    // Set defaults that might be overridden
+    payload.status = TicketStatus.NEW; // Default status
+    // payload.assignedAgencyId will be set if routing occurs
+
+    let categoryObject: Category | null = null;
+    let categoryNameForAi: string | undefined = undefined;
 
     if (creatingUser) {
       payload.isAnonymous = false;
       payload.citizenId = creatingUser.id;
-    } else if (!dto.isAnonymous) {
-      payload.isAnonymous = true;
+    } else if (!dto.isAnonymous) { // This implies a submission without login, not explicitly anonymous
+      payload.isAnonymous = true; // Treat as anonymous
       if (!dto.anonymousCreatorName || !dto.anonymousCreatorContact) {
-          throw new ApiError(400, 'Name and contact are required for non-logged-in submissions not marked anonymous.');
+        throw new ApiError(400, 'Name and contact are required for non-logged-in submissions not marked anonymous.');
       }
+      // Ensure anonymous details from DTO are in payload
+      payload.anonymousCreatorName = dto.anonymousCreatorName;
+      payload.anonymousCreatorContact = dto.anonymousCreatorContact;
     }
+    // If dto.isAnonymous is true, payload.isAnonymous is already true from ...dto.
 
+    // 1. Handle Category and Attempt Rule-Based Assignment
     if (dto.categoryId) {
-      const category = await prisma.category.findUnique({ where: { id: dto.categoryId } });
-      if (!category) {
-        throw new ApiError(404, `Category with ID "${dto.categoryId}" not found.`);
+      categoryObject = await prisma.category.findUnique({ where: { id: dto.categoryId } });
+
+      console.log("<><><><><>", categoryObject)
+      if (!categoryObject) {
+        throw new ApiError(400, `Invalid category ID: "${dto.categoryId}" not found.`);
       }
+      payload.categoryId = dto.categoryId; // Ensure it's in payload
+      categoryNameForAi = categoryObject.name;
+
       const routingRule = await prisma.routingRule.findUnique({
         where: { categoryId: dto.categoryId, status: ResourceStatus.ACTIVE },
       });
+
       if (routingRule && routingRule.assignedAgencyId) {
-        const agency = await prisma.agency.findUnique({where: {id: routingRule.assignedAgencyId}});
+        const agency = await prisma.agency.findUnique({ where: { id: routingRule.assignedAgencyId } });
         if (agency && agency.status === ResourceStatus.ACTIVE) {
-            assignedAgencyId = routingRule.assignedAgencyId;
+          payload.assignedAgencyId = routingRule.assignedAgencyId; // Set on payload
+          payload.status = TicketStatus.ASSIGNED;         // Set on payload
+          logger.info(`Ticket auto-assigned to agency "${agency.name}" via rule. Status: ${payload.status}.`);
         } else {
-            console.warn(`Routing rule found for category ${dto.categoryId} but agency ${routingRule.assignedAgencyId} is inactive or not found.`);
+          logger.warn(`Rule-based: Agency for category "${categoryObject.name}" is inactive/not found. Will attempt AI.`);
         }
       } else {
-        console.warn(`No active routing rule found for category ${dto.categoryId}. Ticket will be unassigned from an agency.`);
+        logger.info(`No active routing rule for category "${categoryObject.name}". Will attempt AI.`);
       }
     } else {
-       console.warn(`No category ID provided. Ticket will be unassigned from an agency and category.`);
+      logger.info('No category ID provided by user. Will attempt AI.');
     }
 
-    const newTicket = await this.ticketRepository.create(payload, assignedAgencyId);
+    // 2. AI-Based Assignment (if not assigned by rule OR no category was given)
+    if (!payload.assignedAgencyId) { // Check if agency was assigned in the step above
+      logger.info(`Attempting AI-based agency suggestion. Category for AI context: "${categoryNameForAi || 'None'}".`);
+      const allCategories = await prisma.category.findMany({ select: { id: true, name: true, description: true } });
+      const allAgencies = await prisma.agency.findMany({ where: { status: ResourceStatus.ACTIVE }, select: { id: true, name: true, description: true } });
+      const allRoutingRulesFromDb = await prisma.routingRule.findMany({
+          where: { status: ResourceStatus.ACTIVE},
+          include: { category: {select: {name: true}}, assignedAgency: {select: {name:true}}}
+      });
+      const aiContext = {
+        categories: allCategories,
+        agencies: allAgencies,
+        routingRules: allRoutingRulesFromDb.map(r => ({ categoryName: r.category?.name, agencyName: r.assignedAgency?.name })),
+      };
+
+      const aiSuggestedAgencyId = await this.ticketAiService.suggestAgencyForTicket(
+        { title: dto.title, detailedDescription: dto.detailedDescription, categoryName: categoryNameForAi },
+        aiContext
+      );
+
+      if (aiSuggestedAgencyId) {
+        const aiAgency = allAgencies.find(a => a.id === aiSuggestedAgencyId);
+        if (aiAgency) {
+          payload.assignedAgencyId = aiSuggestedAgencyId; // Set on payload
+          payload.status = TicketStatus.ASSIGNED;         // Set on payload
+          logger.info(`Ticket auto-assigned to agency "${aiAgency.name}" via AI. Status: ${payload.status}.`);
+        } else {
+            logger.warn(`AI suggested agency ID "${aiSuggestedAgencyId}" (not valid/active). Ticket remains unassigned by AI.`);
+        }
+      } else {
+        logger.info('AI did not provide agency suggestion. Ticket remains unassigned by AI.');
+      }
+    }
+    // At this point, payload.status and payload.assignedAgencyId hold the final determined values.
+    // If still no assignedAgencyId, payload.status would likely still be NEW (its initial default).
+    // If no assignedAgencyId but AI suggested one, status is ASSIGNED.
+    // If rule assigned, status is ASSIGNED.
+
+    // The repository's create method now takes the consolidated payload
+    const newTicket = await this.ticketRepository.create(payload);
+
 
     let recipientPhone = '';
     let recipientName = 'Citizen';

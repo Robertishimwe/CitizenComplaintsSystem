@@ -9,6 +9,12 @@ import { UserRole } from '@/modules/users/enums/user.enums';
 const router = Router();
 const categoryController = new CategoryController();
 
+
+router.get(
+  '/',
+  validateQuery(ListCategoriesQuerySchema.shape.query),
+  categoryController.listCategories
+);
 // All category routes are admin-only
 router.use(authorize([UserRole.ADMIN]));
 
@@ -23,11 +29,11 @@ router.post(
 );
 
 // GET /categories - List all categories (paginated)
-router.get(
-  '/',
-  validateQuery(ListCategoriesQuerySchema.shape.query),
-  categoryController.listCategories
-);
+// router.get(
+//   '/',
+//   validateQuery(ListCategoriesQuerySchema.shape.query),
+//   categoryController.listCategories
+// );
 
 // GET /categories/:categoryId - Get a specific category
 router.get(

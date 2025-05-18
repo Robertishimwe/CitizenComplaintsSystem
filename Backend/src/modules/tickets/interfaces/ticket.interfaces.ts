@@ -23,17 +23,30 @@ export interface TicketResponse extends Omit<PrismaTicket, 'citizenId' | 'assign
 
 
 export interface CreateTicketPayload {
+  // status: TicketStatus;
+  // title: string;
+  // location: string;
+  // priority?: TicketPriority;
+  // detailedDescription: string;
+  // categoryId?: string | null; // Can be null initially if AI will suggest
+  // // For registered citizen
+  // citizenId?: string;
+  // // For anonymous submission
+  // isAnonymous?: boolean;
+  // assignedAgencyId?: string | null;
+  // anonymousCreatorName?: string;
+  // anonymousCreatorContact?: string; // Phone or email
   title: string;
   location: string;
   priority?: TicketPriority;
   detailedDescription: string;
-  categoryId?: string | null; // Can be null initially if AI will suggest
-  // For registered citizen
+  categoryId?: string | null;
   citizenId?: string;
-  // For anonymous submission
   isAnonymous?: boolean;
   anonymousCreatorName?: string;
-  anonymousCreatorContact?: string; // Phone or email
+  anonymousCreatorContact?: string;
+  status?: TicketStatus;           // ADDED
+  assignedAgencyId?: string | null; // ADDED (allow null for explicit unassignment
 }
 
 export interface UpdateTicketPayload { // For agent/admin updates
