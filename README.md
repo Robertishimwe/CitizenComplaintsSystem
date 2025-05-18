@@ -59,67 +59,68 @@ This APP is built with a focus on scalability, modularity, and best practices us
 
 ```mermaid
 graph TD
-    subgraph "User Interfaces (Not part of this API repo)"
-        UI_Citizen[Citizen Web/Mobile App]
-        UI_Admin[Admin Panel UI]
-        UI_Agency[Agency Staff UI]
+    subgraph "A: User Interfaces (External)"
+        UI_Citizen["Citizen Web/Mobile App"]
+        UI_Admin["Admin Panel UI"]
+        UI_Agency["Agency Staff UI"]
     end
 
-    subgraph "API Gateway / Load Balancer (Optional for Scale)"
-        LB[Load Balancer]
+    subgraph "B: API Gateway / Load Balancer (Optional for Scale)"
+        LB["Load Balancer"]
     end
 
-    subgraph "Citizen Engagement API (Node.js/TypeScript/Express)"
-        API[Express App Core]
-        AuthMod[Auth Module]
-        UsersMod[Users Module]
-        AgenciesMod[Agencies Module]
-        CategoriesMod[Categories Module]
-        RoutingMod[Routing Rules Module]
-        TicketsMod[Tickets Module]
-        NotifMod[Notifications Module]
+    subgraph "C: Citizen Engagement API (Node.js/TypeScript/Express)"
+        C_API["Express App Core"]
+        C_AuthMod["Auth Module"]
+        C_UsersMod["Users Module"]
+        C_AgenciesMod["Agencies Module"]
+        C_CategoriesMod["Categories Module"]
+        C_RoutingMod["Routing Rules Module"]
+        C_TicketsMod["Tickets Module"]
+        C_NotifMod["Notifications Module"]
     end
 
-    subgraph "Background Processing"
-        BullMQ[BullMQ (Message Queue)]
-        Worker[Notification Worker]
+    subgraph "D: Background Processing"
+        D_BullMQ["BullMQ (Message Queue)"]
+        D_Worker["Notification Worker"]
     end
 
-    subgraph "Databases & Caches"
-        PostgreSQL[PostgreSQL Database]
-        Redis[Redis (for BullMQ)]
+    subgraph "E: Databases & Caches"
+        E_PostgreSQL["PostgreSQL Database"]
+        E_Redis["Redis (for BullMQ)"]
     end
 
-    subgraph "External Services"
-        Pindo[Pindo SMS API]
-        Gemini[Google Gemini API]
+    subgraph "F: External Services"
+        F_Pindo["Pindo SMS API"]
+        F_Gemini["Google Gemini API"]
     end
 
+    %% Connections
     UI_Citizen --> LB
     UI_Admin --> LB
     UI_Agency --> LB
-    LB --> API
+    LB --> C_API
 
-    API --> AuthMod
-    API --> UsersMod
-    API --> AgenciesMod
-    API --> CategoriesMod
-    API --> RoutingMod
-    API --> TicketsMod
-    API --> NotifMod
+    C_API --> C_AuthMod
+    C_API --> C_UsersMod
+    C_API --> C_AgenciesMod
+    C_API --> C_CategoriesMod
+    C_API --> C_RoutingMod
+    C_API --> C_TicketsMod
+    C_API --> C_NotifMod
 
-    AuthMod --> PostgreSQL
-    UsersMod --> PostgreSQL
-    AgenciesMod --> PostgreSQL
-    CategoriesMod --> PostgreSQL
-    RoutingMod --> PostgreSQL
-    TicketsMod --> PostgreSQL
-    TicketsMod --> BullMQ
-    TicketsMod --> Gemini
+    C_AuthMod --> E_PostgreSQL
+    C_UsersMod --> E_PostgreSQL
+    C_AgenciesMod --> E_PostgreSQL
+    C_CategoriesMod --> E_PostgreSQL
+    C_RoutingMod --> E_PostgreSQL
+    C_TicketsMod --> E_PostgreSQL
+    C_TicketsMod --> D_BullMQ
+    C_TicketsMod --> F_Gemini
 
-    BullMQ --> Worker
-    Worker --> Pindo
-    BullMQ --> Redis
+    D_BullMQ --> D_Worker
+    D_Worker --> F_Pindo
+    D_BullMQ --> E_Redis
 ```
 
 ### Core Components
