@@ -279,7 +279,7 @@ stateDiagram-v2
 ├── tests/                   # Automated tests (unit, integration)
 ├── .env.example             # Environment variable template
 ├── .gitignore
-├── Dockerfile               # (Optional) For containerization
+├── Dockerfile               
 ├── package.json
 └── tsconfig.json
 ```
@@ -314,8 +314,8 @@ stateDiagram-v2
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
-    cd citizen-engagement-system-api
+    git clone https://github.com/Robertishimwe/CitizenComplaintsSystem.git
+    cd CitizenComplaintsSystem
     ```
 
 2.  **Install dependencies:**
@@ -384,50 +384,7 @@ stateDiagram-v2
     *   `PATCH /:ticketId/assign`: Assign agent to ticket (Admin).
     *   `POST /:ticketId/transfer`: Transfer ticket (Admin/Agent).
 
-## Testing
-
-*(Describe your testing strategy. e.g., unit tests, integration tests, tools used like Jest, Supertest.)*
-
-To run tests:
-```bash
-npm test
-```
-
-## Future Enhancements
-
-*   **Full AI-Assisted Routing Implementation:** Complete the Gemini API integration for suggesting agencies for uncategorized tickets.
-*   **Email Notifications:** Add email notifications alongside SMS.
-*   **File Attachments:** Allow citizens and agents to attach files to tickets/communications.
-*   **Advanced Reporting & Analytics:** For admins to track KPIs.
-*   **Real-time Updates:** Use WebSockets for real-time updates on ticket changes.
-*   **OAuth Integration:** Allow login via Google, etc.
-*   **Full-Text Search Optimizations:** For tickets and knowledge base.
-*   **Knowledge Base Integration:** Allow agents to link tickets to FAQ/knowledge base articles.
-*   **Service Level Agreements (SLAs):** Track and manage ticket resolution times.
-*   **User Profile Management:** Allow users to update their own profiles.
-*   **Password Reset Functionality.**
-
-## Contributing
-
-Contributions are welcome! Please follow the standard fork-and-pull-request workflow. Ensure your code adheres to the existing style and all tests pass.
-
-1.  Fork the repository.
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE.md) - see the `LICENSE.md` file for details (create this file if you haven't).
-```
-
-**To make this README even better:**
-
-1.  **`LICENSE.md`:** Create a `LICENSE.md` file (e.g., with the MIT License text).
-2.  **API Documentation:** If you generate API docs (Swagger/OpenAPI), link to them.
-3.  **Screenshots/Diagrams:** You can embed actual image files in GitHub Markdown for the architecture diagram if `mermaid` rendering isn't sufficient or for other visual aids.
-4.  **Deployment:** Add a section on how to deploy this application (e.g., using Docker, cloud platforms).
-5.  **Fill in Placeholders:** Replace `<repository-url>` and complete the API Endpoints and Testing sections with more specific details.
-
-This README provides a solid starting point for your project's documentation on GitHub.
+This project is licensed under the [MIT License]
