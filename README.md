@@ -1,4 +1,4 @@
-# Citizen Engagement System API
+# MVP for a Citizen Complaints and Engagement System
 
 ## Overview
 
