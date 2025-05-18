@@ -1,4 +1,3 @@
-```markdown
 # Citizen Engagement System API
 
 ## Overview
