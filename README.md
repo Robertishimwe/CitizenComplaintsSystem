@@ -29,10 +29,7 @@ This APP is built with a focus on scalability, modularity, and best practices us
     *   [Installation Steps](#installation-steps)
     *   [Running the Application](#running-the-application)
 7.  [API Endpoints](#api-endpoints)
-8.  [Testing](#testing)
-9.  [Future Enhancements](#future-enhancements)
-10. [Contributing](#contributing)
-11. [License](#license)
+8. [License](#license)
 
 ## Features
 
