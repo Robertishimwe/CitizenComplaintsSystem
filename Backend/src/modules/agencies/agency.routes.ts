@@ -9,6 +9,12 @@ import { UserRole } from '@/modules/users/enums/user.enums'; // Or your shared U
 const router = Router();
 const agencyController = new AgencyController();
 
+router.get(
+  '/',
+  authorize([UserRole.ADMIN, UserRole.AGENCY_STAFF]),
+  validateQuery(ListAgenciesQuerySchema.shape.query),
+  agencyController.listAgencies
+);
 // All agency routes are admin-only
 router.use(authorize([UserRole.ADMIN]));
 
@@ -20,11 +26,11 @@ router.post(
 );
 
 // GET /agencies - List all agencies
-router.get(
-  '/',
-  validateQuery(ListAgenciesQuerySchema.shape.query),
-  agencyController.listAgencies
-);
+// router.get(
+//   '/',
+//   validateQuery(ListAgenciesQuerySchema.shape.query),
+//   agencyController.listAgencies
+// );
 
 // GET /agencies/:agencyId - Get a specific agency
 router.get(

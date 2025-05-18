@@ -76,7 +76,7 @@ router.patch(
 router.patch(
     '/:ticketId/assign',
     requireAuth,
-    authorize([UserRole.ADMIN]), // Or more granular permissions later
+    authorize([UserRole.ADMIN, UserRole.AGENCY_STAFF]), // Or more granular permissions later
     (req: Request, res: Response, next: NextFunction) => {
         const result = UpdateTicketAssignmentSchema.safeParse({ params: req.params, body: req.body });
         if (!result.success) return next(result.error);

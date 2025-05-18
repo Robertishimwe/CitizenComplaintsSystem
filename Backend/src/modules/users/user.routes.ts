@@ -12,7 +12,7 @@ const userController = new UserController();
 // GET /users - List all users (Admin)
 router.get(
   '/',
-  authorize([UserRole.ADMIN]),
+  authorize([UserRole.ADMIN, UserRole.AGENCY_STAFF]),
   validateQuery(ListUsersQuerySchema.shape.query), // Validate query part of the schema
   userController.listUsers
 );
