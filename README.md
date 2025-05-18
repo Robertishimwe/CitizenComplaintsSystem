@@ -65,8 +65,8 @@ graph TD
         UI_Agency["Agency Staff UI"]
     end
 
-    subgraph "B: API Gateway / Load Balancer (Optional for Scale)"
-        LB["Load Balancer"]
+    subgraph "B: Gateway"
+        LB["Cloudflare"]
     end
 
     subgraph "C: Citizen Engagement API (Node.js/TypeScript/Express)"
