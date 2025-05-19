@@ -406,9 +406,9 @@ export class TicketService {
         else if (ticket.isAnonymous) canComment = true;
     }
 
-    // if (!canComment) {
-    //     throw new ApiError(403, 'You are not authorized to add communication to this ticket.');
-    // }
+    if (!canComment) {
+        throw new ApiError(403, 'You are not authorized to add communication to this ticket.');
+    }
     if (dto.isInternal && sendingUser?.role === UserRole.CITIZEN) {
         throw new ApiError(400, 'Citizens cannot add internal notes.');
     }
