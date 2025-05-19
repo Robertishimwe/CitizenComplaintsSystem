@@ -1,5 +1,10 @@
 # MVP for a Citizen Complaints and Engagement System
 
+## Deployments:
+
+- [x] Frontend(https://gov.ishimwe.rw)
+- [x] Backend(https://api-complaints.ishimwe.rw)
+
 ## Overview
 
 The Citizen Engagement System is a robust solution designed to facilitate communication between citizens and government agencies. It allows citizens to submit complaints or feedback on public services, which are then categorized, routed to the appropriate agency, and tracked through their lifecycle. The system supports notifications, an admin panel for management, and an agency panel for handling tickets. A key feature is AI-assisted routing for uncategorized submissions.
