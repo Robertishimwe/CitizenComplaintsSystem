@@ -403,6 +403,7 @@ export class TicketService {
         if (sendingUser.role === UserRole.ADMIN) canComment = true;
         else if (sendingUser.role === UserRole.CITIZEN && ticket.citizenId === sendingUser.id && !ticket.isAnonymous) canComment = true;
         else if (sendingUser.role === UserRole.AGENCY_STAFF && ticket.assignedAgencyId === sendingUser.agencyId) canComment = true;
+        else if (ticket.isAnonymous) canComment = true;
     }
 
     if (!canComment) {
